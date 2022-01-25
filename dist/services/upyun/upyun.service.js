@@ -26,13 +26,13 @@ let UpyunService = class UpyunService {
                 mergedValue = (_a = envs[key]) !== null && _a !== void 0 ? _a : config[key];
             }
             if (!mergedValue) {
-                throw new common_1.InternalServerErrorException('Missing config props');
+                throw new common_1.InternalServerErrorException(`Missing config props: ${key}`);
             }
             mergedConfig[key] = mergedValue;
         });
         return mergedConfig;
     }
-    async retriveUpyunFileList(config, fullRetrive) {
+    async retriveUpyunFileList(config, fullRetrieve) {
         const { service, operator, password } = config;
         const instance = new upyun.Service(service, operator, password);
         const client = new upyun.Client(instance);
@@ -58,7 +58,7 @@ let UpyunService = class UpyunService {
                     time,
                     size,
                 };
-                if (fileIdentifier === 'F' && fullRetrive) {
+                if (fileIdentifier === 'F' && fullRetrieve) {
                     const fullPath = (0, path_1.join)(path, name);
                     await getDirectoryMap(fullPath);
                     fileMeta.isDir = true;

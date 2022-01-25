@@ -33,7 +33,7 @@ let AppController = class AppController {
         switch (config.storage) {
             case 'upyun': {
                 const mergedStorageConfig = this.upyunService.mergeStorageConfig(config.storageConfig);
-                result = await this.upyunService.retriveUpyunFileList(mergedStorageConfig, config.fullRetrive);
+                result = await this.upyunService.retriveUpyunFileList(mergedStorageConfig, config.fullRetrieve);
             }
         }
         return await this.cacheManager.set(realIP, result);

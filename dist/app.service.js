@@ -11,11 +11,25 @@ const common_1 = require("@nestjs/common");
 const utils_1 = require("./core/utils");
 let AppService = class AppService {
     async readConfig() {
-        const [err, val] = await (0, utils_1.awaitHelper)(Promise.resolve().then(() => require('./core/config')));
-        if (!val) {
-            throw new common_1.InternalServerErrorException(err);
-        }
-        return val.default;
+        const [_, val] = await (0, utils_1.awaitHelper)(Promise.resolve().then(() => require('./core/config')));
+        const envs = {
+            storage: process.env.EPH_STORAGE,
+            host: process.env.EPH_HOST,
+            fullRetrieve: process.env.EPH_FULL_RETRIEVE === 'true',
+        };
+        const mergedConfig = {};
+        Object.keys(envs).map((key) => {
+            var _a;
+            let mergedValue = envs[key];
+            if (val) {
+                mergedValue = (_a = envs[key]) !== null && _a !== void 0 ? _a : val[key];
+            }
+            if (!mergedValue) {
+                throw new common_1.InternalServerErrorException(`Missing config props: ${key}`);
+            }
+            mergedConfig[key] = mergedValue;
+        });
+        return mergedConfig;
     }
 };
 AppService = __decorate([

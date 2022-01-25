@@ -1,6 +1,10 @@
 declare global {
   namespace NodeJS {
     export interface ProcessEnv {
+      // Ephemeres
+      EPH_STORAGE?: StorageTypes;
+      EPH_HOST?: string;
+      EPH_FULL_RETRIEVE?: string;
       // Upyun
       UPYUN_SERVICE?: string;
       UPYUN_OPERATOR?: string;
@@ -26,7 +30,7 @@ type StorageTypes = 'upyun' | 'ten';
 interface EphemeresConfig {
   storage: StorageTypes;
   host: string;
-  fullRetrive: boolean;
+  fullRetrieve: boolean;
   storageConfig?: SDKs;
 }
 

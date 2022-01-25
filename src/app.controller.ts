@@ -42,7 +42,7 @@ export class AppController {
 
         result = await this.upyunService.retriveUpyunFileList(
           mergedStorageConfig,
-          config.fullRetrive,
+          config.fullRetrieve,
         );
       }
     }
