@@ -22,17 +22,30 @@ let AppController = class AppController {
         this.appService = appService;
         this.upyunService = upyunService;
     }
-    test(realIP) {
-        return realIP;
+    async getFileList(realIP) {
+        const cache = await this.cacheManager.get(realIP);
+        if (cache) {
+            console.log(`Sending cache for ${realIP}`);
+            return cache;
+        }
+        const config = await this.appService.readConfig();
+        let result;
+        switch (config.storage) {
+            case 'upyun': {
+                const mergedStorageConfig = this.upyunService.mergeStorageConfig(config.storageConfig);
+                result = await this.upyunService.retriveUpyunFileList(mergedStorageConfig, config.fullRetrive);
+            }
+        }
+        return await this.cacheManager.set(realIP, result);
     }
 };
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Headers)('cache-control')),
+    __param(0, (0, common_1.Headers)('x-real-ip')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "test", null);
+    __metadata("design:returntype", Promise)
+], AppController.prototype, "getFileList", null);
 AppController = __decorate([
     (0, common_1.Controller)(),
     __param(0, (0, common_1.Inject)(common_1.CACHE_MANAGER)),

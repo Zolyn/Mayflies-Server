@@ -19,27 +19,33 @@ export class AppController {
   ) {}
 
   @Get()
-  // async getFileList(): Promise<DirectoryMap> {
-  //   const config = await this.appService.readConfig();
-  //
-  //   let result: DirectoryMap | null;
-  //
-  //   switch (config.storage) {
-  //     case 'upyun': {
-  //       const mergedStorageConfig = this.upyunService.mergeStorageConfig(
-  //         config.storageConfig as UpyunSdk,
-  //       );
-  //
-  //       result = await this.upyunService.retriveUpyunFileList(
-  //         mergedStorageConfig,
-  //         config.fullRetrive,
-  //       );
-  //     }
-  //   }
-  //
-  //   return result;
-  // }
-  test(@Headers('x-real-ip') realIP: string) {
-    return realIP;
+  async getFileList(
+    @Headers('x-real-ip') realIP: string,
+  ): Promise<DirectoryMap> {
+    const cache: DirectoryMap = await this.cacheManager.get(realIP);
+
+    if (cache) {
+      console.log(`Sending cache for ${realIP}`);
+      return cache;
+    }
+
+    const config = await this.appService.readConfig();
+
+    let result: DirectoryMap | null;
+
+    switch (config.storage) {
+      case 'upyun': {
+        const mergedStorageConfig = this.upyunService.mergeStorageConfig(
+          config.storageConfig as UpyunSdk,
+        );
+
+        result = await this.upyunService.retriveUpyunFileList(
+          mergedStorageConfig,
+          config.fullRetrive,
+        );
+      }
+    }
+
+    return await this.cacheManager.set(realIP, result);
   }
 }
