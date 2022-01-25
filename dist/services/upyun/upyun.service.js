@@ -19,9 +19,12 @@ let UpyunService = class UpyunService {
             password: process.env.UPYUN_PASSWORD,
         };
         const mergedConfig = {};
-        Object.keys(config).map((key) => {
+        Object.keys(envs).map((key) => {
             var _a;
-            const mergedValue = (_a = config[key]) !== null && _a !== void 0 ? _a : envs[key];
+            let mergedValue = envs[key];
+            if (config) {
+                mergedValue = (_a = envs[key]) !== null && _a !== void 0 ? _a : config[key];
+            }
             if (!mergedValue) {
                 throw new common_1.InternalServerErrorException('Missing config props');
             }

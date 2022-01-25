@@ -8,7 +8,8 @@ import {
 import { Cache } from 'cache-manager';
 import { AppService } from './app.service';
 import { UpyunService } from './services/upyun/upyun.service';
-import { DirectoryMap, UpyunSdk } from './core/types';
+import { DirectoryMap } from './core/types';
+import { UpyunConfig } from '~/core/utils';
 
 @Controller()
 export class AppController {
@@ -36,7 +37,7 @@ export class AppController {
     switch (config.storage) {
       case 'upyun': {
         const mergedStorageConfig = this.upyunService.mergeStorageConfig(
-          config.storageConfig as UpyunSdk,
+          (config as UpyunConfig).storageConfig,
         );
 
         result = await this.upyunService.retriveUpyunFileList(

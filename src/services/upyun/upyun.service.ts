@@ -3,7 +3,6 @@ import * as upyun from 'upyun';
 import { join } from 'path';
 import { DirectoryMap, FileMeta, FileMetaList, UpyunSdk } from '~/core/types';
 import {
-  UpyunConfig,
   awaitHelper,
   getFileTypeAndIcon,
   transformTime,
@@ -24,7 +23,7 @@ interface USSListResult {
 
 @Injectable()
 export class UpyunService {
-  mergeStorageConfig(config: UpyunSdk): UpyunSdk {
+  mergeStorageConfig(config: UpyunSdk | undefined): UpyunSdk {
     const envs: UpyunSdk = {
       service: process.env.UPYUN_SERVICE,
       operator: process.env.UPYUN_OPERATOR,
@@ -34,8 +33,12 @@ export class UpyunService {
     // @ts-ignore
     const mergedConfig: UpyunSdk = {};
 
-    Object.keys(config).map((key) => {
-      const mergedValue = config[key] ?? envs[key];
+    Object.keys(envs).map((key) => {
+      let mergedValue = envs[key];
+      if (config) {
+        mergedValue = envs[key] ?? config[key];
+      }
+
       if (!mergedValue) {
         throw new InternalServerErrorException('Missing config props');
       }
