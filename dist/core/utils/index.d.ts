@@ -4,11 +4,11 @@ interface StringKeyObject {
 }
 interface UpyunConfig extends EphemeresConfig {
     storage: 'upyun';
-    storageConfig: UpyunSdk;
+    storageConfig?: UpyunSdk;
 }
 interface TenConfig extends EphemeresConfig {
     storage: 'ten';
-    storageConfig: TenSdk;
+    storageConfig?: TenSdk;
 }
 declare function defineConfig(config: UpyunConfig): UpyunConfig;
 declare function defineConfig(config: TenConfig): TenConfig;

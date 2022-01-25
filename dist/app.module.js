@@ -15,7 +15,7 @@ let AppModule = class AppModule {
 };
 AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [],
+        imports: [common_1.CacheModule.register()],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, upyun_service_1.UpyunService],
     })

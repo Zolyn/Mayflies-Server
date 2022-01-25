@@ -12,13 +12,13 @@ interface StringKeyObject {
 
 interface UpyunConfig extends EphemeresConfig {
   storage: 'upyun';
-  storageConfig: UpyunSdk;
+  storageConfig?: UpyunSdk;
 }
 
 // Not implemented yet
 interface TenConfig extends EphemeresConfig {
   storage: 'ten';
-  storageConfig: TenSdk;
+  storageConfig?: TenSdk;
 }
 
 function defineConfig(config: UpyunConfig): UpyunConfig;

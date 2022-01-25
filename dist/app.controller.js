@@ -8,37 +8,35 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppController = void 0;
 const common_1 = require("@nestjs/common");
 const app_service_1 = require("./app.service");
 const upyun_service_1 = require("./services/upyun/upyun.service");
 let AppController = class AppController {
-    constructor(appService, upyunService) {
+    constructor(cacheManager, appService, upyunService) {
+        this.cacheManager = cacheManager;
         this.appService = appService;
         this.upyunService = upyunService;
     }
-    async getFileList() {
-        const config = await this.appService.readConfig();
-        let result;
-        switch (config.storage) {
-            case 'upyun': {
-                const mergedStorageConfig = this.upyunService.mergeStorageConfig(config.storageConfig);
-                result = await this.upyunService.retriveUpyunFileList(mergedStorageConfig, config.fullRetrive);
-            }
-        }
-        return result;
+    test(realIP) {
+        return realIP;
     }
 };
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Headers)('cache-control')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], AppController.prototype, "getFileList", null);
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "test", null);
 AppController = __decorate([
     (0, common_1.Controller)(),
-    __metadata("design:paramtypes", [app_service_1.AppService,
+    __param(0, (0, common_1.Inject)(common_1.CACHE_MANAGER)),
+    __metadata("design:paramtypes", [Object, app_service_1.AppService,
         upyun_service_1.UpyunService])
 ], AppController);
 exports.AppController = AppController;
