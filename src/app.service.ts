@@ -24,7 +24,7 @@ export class AppService {
       }
 
       if (!mergedValue) {
-        throw new InternalServerErrorException(`Missing config props: ${key}`);
+        throw new InternalServerErrorException(`Missing config prop: ${key}`);
       }
 
       mergedConfig[key] = mergedValue;
