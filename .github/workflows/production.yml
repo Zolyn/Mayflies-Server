@@ -8,14 +8,22 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v2
 
-      - name: Cache
-        uses: c-hive/gha-yarn-cache@v2
+      - name: Pnpm setup
+        uses: pnpm/action-setup@v2.0.1
+        with:
+          version: 6.24.4
 
-      - name: Install Deps
-        run: yarn install --frozen-lockfile
+      - name: Use Node.js 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
 
       - name: Build 🔧 # This example project is built using npm and outputs the result to the 'build' folder. Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
-        run: yarn run build
+        run: pnpm build
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.2.2
