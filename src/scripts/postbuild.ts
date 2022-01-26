@@ -17,6 +17,6 @@ console.log('Done.');
 
 console.log('Copying vercel configuration...');
 
-fs.copyFileSync(rootDir('vercel.prod.json'), rootDir('dist/vercel.json'));
+fs.copyFileSync(rootDir('vercel.json'), rootDir('dist/vercel.json'));
 
 console.log('Done.');
