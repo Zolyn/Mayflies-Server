@@ -1,13 +1,13 @@
 {
-  "name": "nest-demo",
+  "name": "ephemeres-server",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "Zolyn",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "nest build && mv vercel.prod.json dist/vercel.json",
+    "build": "nest build && node dist/scripts/postbuild.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
