@@ -47,6 +47,6 @@ export class AppController {
       }
     }
 
-    return await this.cacheManager.set(realIP, result);
+    return await this.cacheManager.set(realIP, result, { ttl: 60 });
   }
 }
