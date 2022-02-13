@@ -1,13 +1,15 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import * as upyun from 'upyun';
 import { join } from 'path';
-import { DirectoryMap, FileMeta, FileMetaList, UpyunSdk } from '~/core/types';
 import {
-  awaitHelper,
-  getFileTypeAndIcon,
-  transformTime,
-  transformBytes,
-} from '~/core/utils';
+  PlainDirectoryMap,
+  PlainFileMeta,
+  PlainFileMetaList,
+  ResolvedProviderConfig,
+  StorageService,
+  UpyunConfig,
+} from '~/core/types';
+import { awaitHelper, mergeConfigAndEnv } from '~/core/utils';
 
 interface USSListFile {
   name: string;
@@ -22,46 +24,40 @@ interface USSListResult {
 }
 
 @Injectable()
-export class UpyunService {
-  mergeStorageConfig(config: UpyunSdk | undefined): UpyunSdk {
-    const envs: UpyunSdk = {
+export class UpyunService implements StorageService {
+  async main({
+    providerConfig,
+    fullRetrieve,
+  }: ResolvedProviderConfig): Promise<PlainDirectoryMap> {
+    return await this.retrieveUpyunFileList(
+      this.mergeProviderConfig(providerConfig as UpyunConfig),
+      fullRetrieve,
+    );
+  }
+
+  mergeProviderConfig(config: UpyunConfig): UpyunConfig {
+    const envs: UpyunConfig = {
       service: process.env.UPYUN_SERVICE,
       operator: process.env.UPYUN_OPERATOR,
       password: process.env.UPYUN_PASSWORD,
     };
 
-    // @ts-ignore
-    const mergedConfig: UpyunSdk = {};
-
-    Object.keys(envs).map((key) => {
-      let mergedValue = envs[key];
-      if (config) {
-        mergedValue = envs[key] ?? config[key];
-      }
-
-      if (!mergedValue) {
-        throw new InternalServerErrorException(`Missing config prop: ${key}`);
-      }
-
-      mergedConfig[key] = mergedValue;
-    });
-
-    return mergedConfig;
+    return mergeConfigAndEnv('upyunService', config, envs);
   }
 
-  async retriveUpyunFileList(
-    config: UpyunSdk,
+  async retrieveUpyunFileList(
+    config: UpyunConfig,
     fullRetrieve: boolean,
-  ): Promise<DirectoryMap> {
+  ): Promise<PlainDirectoryMap> {
     const { service, operator, password } = config;
     const instance = new upyun.Service(service, operator, password);
 
     const client = new upyun.Client(instance);
 
-    const dirMap: DirectoryMap = {};
+    const dirMap: PlainDirectoryMap = {};
 
     async function getDirectoryMap(path: string): Promise<void> {
-      const fileMetaList: FileMetaList = [];
+      const fileMetaList: PlainFileMetaList = [];
       const [err, currentFiles] = await awaitHelper<USSListResult | false>(
         client.listDir(path),
       );
@@ -80,15 +76,9 @@ export class UpyunService {
         time,
         size,
       } of currentFiles.files) {
-        const { type, icon } = getFileTypeAndIcon(name);
-
-        const fileMeta: FileMeta = {
+        const fileMeta: PlainFileMeta = {
           isDir: false,
           pathname: name,
-          transformedTime: transformTime(time),
-          transformedSize: transformBytes(size),
-          type,
-          icon,
           time,
           size,
         };
@@ -98,8 +88,6 @@ export class UpyunService {
           await getDirectoryMap(fullPath);
 
           fileMeta.isDir = true;
-          fileMeta.icon = 'folder';
-          fileMeta.type = 'folder';
         }
 
         fileMetaList.push(fileMeta);

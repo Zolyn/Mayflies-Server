@@ -2,29 +2,12 @@
  * await帮助函数，帮助捕获异常
  * 由于只需要关心结果是否存在，err始终为string
  */
-import { EphemeresConfig, UpyunSdk, TenSdk, FileType } from '../types';
+import { EphemeresConfig, FileType } from '../types';
 import { extname } from 'path';
+import { InternalServerErrorException } from '@nestjs/common';
 
 // 只有string类型的键的对象
-interface StringKeyObject {
-  [p: string]: any;
-}
-
-interface UpyunConfig extends EphemeresConfig {
-  storage: 'upyun';
-  storageConfig?: UpyunSdk;
-}
-
-// Not implemented yet
-interface TenConfig extends EphemeresConfig {
-  storage: 'ten';
-  storageConfig?: TenSdk;
-}
-
-function defineConfig(config: UpyunConfig): UpyunConfig;
-
-function defineConfig(config: TenConfig): TenConfig;
-
+type StringKeyObject = Record<string, any>;
 function defineConfig(config: EphemeresConfig): EphemeresConfig {
   return config;
 }
@@ -192,13 +175,38 @@ function deepMerge<T extends StringKeyObject>(target: T, merge: T): T {
   return mergedObject as T;
 }
 
+function mergeConfigAndEnv<T extends object>(
+  identity: string,
+  config: T,
+  envs: T,
+): T {
+  const mergedConfig: Partial<T> = {};
+
+  Object.keys(envs).map((key) => {
+    let mergedVal = envs[key];
+
+    if (config) {
+      mergedVal = envs[key] ?? config[key];
+    }
+
+    if (mergedVal === undefined) {
+      throw new InternalServerErrorException(
+        `[${identity}]: Missing or improper value for prop: ${key}`,
+      );
+    }
+
+    mergedConfig[key] = mergedVal;
+  });
+
+  return mergedConfig as T;
+}
+
 export {
   awaitHelper,
   defineConfig,
-  UpyunConfig,
-  TenConfig,
   transformTime,
   transformBytes,
   getFileTypeAndIcon,
   deepMerge,
+  mergeConfigAndEnv,
 };

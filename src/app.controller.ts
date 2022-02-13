@@ -1,52 +1,24 @@
-import {
-  Controller,
-  Get,
-  Headers,
-  Inject,
-  CACHE_MANAGER,
-} from '@nestjs/common';
-import { Cache } from 'cache-manager';
+import { Controller, Get, Headers, Ip } from '@nestjs/common';
 import { AppService } from './app.service';
-import { UpyunService } from './services/upyun/upyun.service';
-import { DirectoryMap } from './core/types';
-import { UpyunConfig } from '~/core/utils';
+import { UpyunService } from './services';
+import { PlainDirectoryMap } from './core/types';
 
 @Controller()
 export class AppController {
   constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly appService: AppService,
     private readonly upyunService: UpyunService,
   ) {}
 
-  @Get()
-  async getFileList(
-    @Headers('x-real-ip') realIP: string,
-  ): Promise<DirectoryMap> {
-    const cache: DirectoryMap = await this.cacheManager.get(realIP);
-
-    if (cache) {
-      console.log(`Sending cache for ${realIP}`);
-      return cache;
-    }
-
-    const config = await this.appService.readConfig();
-
-    let result: DirectoryMap | null;
-
-    switch (config.storage) {
-      case 'upyun': {
-        const mergedStorageConfig = this.upyunService.mergeStorageConfig(
-          (config as UpyunConfig).storageConfig,
-        );
-
-        result = await this.upyunService.retriveUpyunFileList(
-          mergedStorageConfig,
-          config.fullRetrieve,
-        );
-      }
-    }
-
-    return await this.cacheManager.set(realIP, result, { ttl: 60 });
+  @Get('upyun')
+  async upyun(
+    @Ip() ip: string,
+    @Headers('x-real-ip') xRealIP: string,
+  ): Promise<PlainDirectoryMap> {
+    return await this.appService.tryGetCache(
+      xRealIP ?? ip,
+      this.upyunService,
+      await this.appService.getProviderConfig('upyun'),
+    );
   }
 }

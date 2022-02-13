@@ -1,35 +1,79 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  CACHE_MANAGER,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { Cache } from 'cache-manager';
 import { awaitHelper } from './core/utils';
-import { EphemeresConfig, UpyunSdk } from './core/types';
+import {
+  EphemeresConfig,
+  PlainDirectoryMap,
+  ProviderList,
+  ProviderMap,
+  ResolvedEphemeresConfig,
+  ResolvedProviderConfig,
+  StorageService,
+} from './core/types';
 
 @Injectable()
 export class AppService {
-  async readConfig(): Promise<EphemeresConfig> {
-    // @ts-ignore
-    const [_, val] = await awaitHelper(import('./core/config'));
+  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  async readConfig(): Promise<ResolvedEphemeresConfig> {
+    const [
+      _,
+      {
+        default: { storageProviders, fullRetrieve = true },
+      },
+    ] = await awaitHelper<{ default: EphemeresConfig }>(
+      // @ts-ignore
+      import('./core/config'),
+    );
 
-    const envs: EphemeresConfig = {
-      storage: process.env.EPH_STORAGE,
-      host: process.env.EPH_HOST,
-      fullRetrieve: process.env.EPH_FULL_RETRIEVE === 'true',
-    };
+    if (!storageProviders) {
+      throw new InternalServerErrorException('No storage provider was found');
+    }
 
-    // @ts-ignore
-    const mergedConfig: EphemeresConfig = {};
+    const providersMap: ProviderMap = new Map();
 
-    Object.keys(envs).map((key) => {
-      let mergedValue = envs[key];
-      if (val) {
-        mergedValue = envs[key] ?? val[key];
-      }
+    if (Array.isArray(storageProviders)) {
+      storageProviders.map((provider) => {
+        providersMap.set(provider.name, provider.config);
+      });
+    } else {
+      providersMap.set(storageProviders.name, storageProviders.config);
+    }
 
-      if (!mergedValue) {
-        throw new InternalServerErrorException(`Missing config prop: ${key}`);
-      }
+    return { providersMap, fullRetrieve };
+  }
 
-      mergedConfig[key] = mergedValue;
-    });
+  async getProviderConfig(path: ProviderList): Promise<ResolvedProviderConfig> {
+    const { providersMap, fullRetrieve } = await this.readConfig();
+    if (providersMap.has(path)) {
+      return { providerConfig: providersMap.get(path), fullRetrieve };
+    } else {
+      throw new InternalServerErrorException(
+        'The specific provider is not configured.',
+      );
+    }
+  }
 
-    return mergedConfig;
+  async tryGetCache(
+    key: string,
+    service: StorageService,
+    resolvedProviderConfig: ResolvedProviderConfig,
+  ): Promise<PlainDirectoryMap> {
+    const cache: PlainDirectoryMap = await this.cacheManager.get(key);
+
+    if (cache) {
+      console.log(`Sending cache for ${key}`);
+      return cache;
+    }
+
+    return await this.cacheManager.set(
+      key,
+      await service.main(resolvedProviderConfig),
+      { ttl: 60 },
+    );
   }
 }
