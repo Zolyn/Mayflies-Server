@@ -43,6 +43,7 @@ function formatTime(time: number): string {
   }
 }
 
+// TODO: Move some logic to client side
 function transformTime(time: number): string {
   const rawDate = new Date(time * 1000);
   const year = rawDate.getFullYear();

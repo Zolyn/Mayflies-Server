@@ -34,6 +34,7 @@ interface EphemeresConfig {
   storageConfig?: SDKs;
 }
 
+// TODO: Move some logic to client side
 interface FileMeta {
   isDir: boolean;
   pathname: string;
